@@ -1,75 +1,112 @@
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.io.File;
+import java.util.Date;
 
 import static org.junit.Assert.*;
 
 public class Tests {
-    @Test
-    public void printFileAllFlags() {
-        ArrayList<String> dirList = new Ls("src/test/resources/o.txt",
-                true, true, true, null).getConvertedFileList();
-        assertEquals("[2KB 01.03.2019 15:51:20 rwx o.txt]", dirList.toString());
+    private String testFileDirectory = "src/test/resources/test.txt";
+    private String testRarDirectory = "src/test/resources/test.rar";
+    private String emptyDirectoryAddress = "src/test/resources/emptyDirectory";
+    private String testDirectoryAddress = "src/test/resources/";
+
+    private File testFile = new File(testFileDirectory);
+    private File testRar = new File(testRarDirectory);
+    private File emptyDirectory = new File (emptyDirectoryAddress);
+
+    private String testFileTime;
+    private String testRarTime;
+    private String emptyDirectoryTime;
+
+    @Before
+    public void createTestFiles() throws IOException {
+        testFile.createNewFile();
+        testFileTime = getLastModify(testFile);
+
+        testRar.createNewFile();
+        testRarTime = getLastModify(testRar);
+
+        emptyDirectory.createNewFile();
+        emptyDirectoryTime = getLastModify(emptyDirectory);
+    }
+
+    @After
+    public void deleteTestFiles() {
+        testFile.delete();
+        testRar.delete();
+        emptyDirectory.delete();
     }
 
     @Test
-    public void printDirectoryAllFlags() {
-        ArrayList<String> dirList = new Ls("src/test/resources/testDirectory",
+    public void printFileAllFlags() throws Exception {
+        ArrayList<String> dirList = new Ls(testFileDirectory,
                 true, true, true, null).getConvertedFileList();
-        assertEquals("[2MB 01.03.2019 18:13:32 rx RANDOMFILE.txt, " +
-                              "0B 01.03.2019 18:09:19 rwx oneMoreFolder, " +
-                              "24B 01.03.2019 14:45:48 rwx !!#I#U@#I@U#'.rar]", dirList.toString());
+        assertEquals("[0B " + testFileTime + " rwx test.txt]", dirList.toString());
     }
 
     @Test
-    public void printFileLFlag() {
-        ArrayList<String> dirList = new Ls("src/test/resources/o.txt",
+    public void printDirectoryAllFlags() throws Exception {
+        ArrayList<String> dirList = new Ls(testDirectoryAddress,
+                true, true, true, null).getConvertedFileList();
+        assertEquals("[0B " + testFileTime + " rwx test.txt, " +
+                              "0B " + testRarTime + " rwx test.rar, " +
+                              "0B "+ emptyDirectoryTime + " rwx emptyDirectory]", dirList.toString());
+    }
+
+    @Test
+    public void printFileLFlag() throws Exception {
+        ArrayList<String> dirList = new Ls(testFileDirectory,
                 true, false, false, null).getConvertedFileList();
-        assertEquals("[o.txt 111 01.03.2019 15:51:20 2180]", dirList.toString());
+        assertEquals("[test.txt 111 " + testFileTime + " 0]", dirList.toString());
     }
 
     @Test
-    public void printFileHFlag() {
-        ArrayList<String> dirList = new Ls("src/test/resources/o.txt",
+    public void printFileHFlag() throws Exception {
+        ArrayList<String> dirList = new Ls(testFileDirectory,
                 false, true, false, null).getConvertedFileList();
-        assertEquals("[o.txt rwx  2KB]", dirList.toString());
+        assertEquals("[test.txt rwx  0B]", dirList.toString());
     }
 
     @Test
-    public void printFileRFlag() {
-        ArrayList<String> dirList = new Ls("src/test/resources/testDirectory",
+    public void printFileRFlag() throws Exception {
+        ArrayList<String> dirList = new Ls(testDirectoryAddress,
                 false, false, true, null).getConvertedFileList();
-        assertEquals("[   RANDOMFILE.txt,    oneMoreFolder,    !!#I#U@#I@U#'.rar]", dirList.toString());
+        assertEquals("[   test.txt,    test.rar,    emptyDirectory]", dirList.toString());
     }
 
     @Test
-    public void printFileLAndHFlag() {
-        ArrayList<String> dirList = new Ls("src/test/resources/o.txt",
+    public void printFileLAndHFlag() throws Exception {
+        ArrayList<String> dirList = new Ls(testFileDirectory,
                 true, true, false, null).getConvertedFileList();
-        assertEquals("[o.txt rwx 01.03.2019 15:51:20 2KB]", dirList.toString());
+        assertEquals("[test.txt rwx " + testFileTime +" 0B]", dirList.toString());
     }
 
     @Test
-    public void printFileHandRFlag() {
-        ArrayList<String> dirList = new Ls("src/test/resources/o.txt",
+    public void printFileHandRFlag() throws Exception {
+        ArrayList<String> dirList = new Ls(testFileDirectory,
                 false, true, true, null).getConvertedFileList();
-        assertEquals("[2KB  rwx o.txt]", dirList.toString());
+        assertEquals("[0B  rwx test.txt]", dirList.toString());
     }
 
     @Test
-    public void printFileLandRFlag() {
-        ArrayList<String> dirList = new Ls("src/test/resources/o.txt",
+    public void printFileLandRFlag() throws Exception {
+        ArrayList<String> dirList = new Ls(testFileDirectory,
                 true, false, true, null).getConvertedFileList();
-        assertEquals("[2180 01.03.2019 15:51:20 111 o.txt]", dirList.toString());
+        assertEquals("[0 " + testFileTime + " 111 test.txt]", dirList.toString());
     }
 
     @Test
-    public void printFileOFlag() throws IOException {
-        Ls ls = new Ls("src/test/resources/o.txt",
+    public void printFileOFlag() throws Exception {
+        Ls ls = new Ls(testFileDirectory,
                 false, false, false, "TestFile.txt");
         File expectedFile = new File("TestFile.txt");
 
@@ -79,22 +116,43 @@ public class Tests {
         String content = new String(Files.readAllBytes(Paths.get("TestFile.txt")));
 
         assertTrue(expectedFile.exists());  //check if file exists
-        assertEquals("o.txt   ", content); //check for equality of contents
+        assertEquals("test.txt   ", content); //check for equality of contents
 
         expectedFile.delete();
     }
 
     @Test
-    public void printFileNoFlag() {
-        ArrayList<String> dirList = new Ls("src/test/resources/o.txt",
+    public void printFileNoFlag() throws Exception {
+        ArrayList<String> dirList = new Ls(testFileDirectory,
                 false, false, false, null).getConvertedFileList();
-        assertEquals("[o.txt   ]", dirList.toString());
+        assertEquals("[test.txt   ]", dirList.toString());
     }
 
     @Test
-    public void printDirectoryNoFlag() {
-        ArrayList<String> dirList = new Ls("src/test/resources/testDirectory",
+    public void printDirectoryNoFlag() throws Exception {
+        ArrayList<String> dirList = new Ls(testDirectoryAddress,
                 false, false, false, null).getConvertedFileList();
-        assertEquals("[!!#I#U@#I@U#'.rar   , oneMoreFolder   , RANDOMFILE.txt   ]", dirList.toString());
+        assertEquals("[emptyDirectory   , test.rar   , test.txt   ]", dirList.toString());
     }
+
+    @Test
+    public void printEmptyDirectory() throws Exception {
+        ArrayList<String> dirList = new Ls(emptyDirectoryAddress,
+                false, false, false, null).getConvertedFileList();
+        assertEquals("[emptyDirectory   ]", dirList.toString());
+    }
+
+    @Test (expected = FileNotFoundException.class)
+    public void testNonexistentFile() throws Exception {
+        ArrayList<String> dirList = new Ls(emptyDirectoryAddress + "/wtf.txt",
+                true, true, true, null).getConvertedFileList();
+    }
+
+    private static String getLastModify(File file) {
+        Date fileDate = new Date(file.lastModified());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+
+        return dateFormat.format(fileDate);
+    }
+
 }
