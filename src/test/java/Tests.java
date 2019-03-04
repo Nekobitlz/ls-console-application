@@ -17,11 +17,11 @@ public class Tests {
     private String testFileDirectory = "src/test/resources/test.txt";
     private String testRarDirectory = "src/test/resources/test.rar";
     private String emptyDirectoryAddress = "src/test/resources/emptyDirectory";
-    private String testDirectoryAddress = "src/test/resources/";
+    private String testDirectoryAddress = "src/test/resources";
 
     private File testFile = new File(testFileDirectory);
     private File testRar = new File(testRarDirectory);
-    private File emptyDirectory = new File (emptyDirectoryAddress);
+    private File emptyDirectory = new File(emptyDirectoryAddress);
 
     private String testFileTime;
     private String testRarTime;
@@ -29,21 +29,25 @@ public class Tests {
 
     @Before
     public void createTestFiles() throws IOException {
+        Files.createDirectories(Paths.get(testDirectoryAddress));
+
         testFile.createNewFile();
         testFileTime = getLastModify(testFile);
 
         testRar.createNewFile();
         testRarTime = getLastModify(testRar);
 
-        emptyDirectory.createNewFile();
+        Files.createDirectories(Paths.get(emptyDirectoryAddress));
         emptyDirectoryTime = getLastModify(emptyDirectory);
     }
 
     @After
-    public void deleteTestFiles() {
+    public void deleteTestFiles() throws IOException {
         testFile.delete();
         testRar.delete();
         emptyDirectory.delete();
+
+        Files.delete(Paths.get(testDirectoryAddress));
     }
 
     @Test
@@ -139,7 +143,7 @@ public class Tests {
     public void printEmptyDirectory() throws Exception {
         ArrayList<String> dirList = new Ls(emptyDirectoryAddress,
                 false, false, false, null).getConvertedFileList();
-        assertEquals("[emptyDirectory   ]", dirList.toString());
+        assertEquals("[]", dirList.toString());
     }
 
     @Test (expected = FileNotFoundException.class)
