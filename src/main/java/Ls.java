@@ -36,8 +36,12 @@ public class Ls {
      *
      * @return File list with all flags
      */
-    public ArrayList<String> getConvertedFileList() {
+    public ArrayList<String> getConvertedFileList() throws Exception {
         File files = new File(fileOrDir);
+
+        if (!files.exists())
+            throw new FileNotFoundException("File not found");
+
         ArrayList<File> fileList = makeFileList(files);
 
         return printDirectory(fileList);
