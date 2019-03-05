@@ -2,16 +2,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.io.File;
-import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class Tests {
     private String testFileDirectory = "src/test/resources/test.txt";
@@ -27,18 +26,25 @@ public class Tests {
     private String testRarTime;
     private String emptyDirectoryTime;
 
+    private String testFileSize;
+    private String testRarSize;
+    private String emptyDirectorySize;
+
     @Before
     public void createTestFiles() throws IOException {
         Files.createDirectories(Paths.get(testDirectoryAddress));
 
         testFile.createNewFile();
-        testFileTime = getLastModify(testFile);
+        testFileTime = Ls.getLastModify(testFile);
+        testFileSize = Ls.getHumanReadableSize(testFile);
 
         testRar.createNewFile();
-        testRarTime = getLastModify(testRar);
+        testRarTime = Ls.getLastModify(testRar);
+        testRarSize = Ls.getHumanReadableSize(testRar);
 
         Files.createDirectories(Paths.get(emptyDirectoryAddress));
-        emptyDirectoryTime = getLastModify(emptyDirectory);
+        emptyDirectoryTime = Ls.getLastModify(emptyDirectory);
+        emptyDirectorySize = Ls.getHumanReadableSize(emptyDirectory);
     }
 
     @After
@@ -54,58 +60,58 @@ public class Tests {
     public void printFileAllFlags() throws Exception {
         ArrayList<String> dirList = new Ls(testFileDirectory,
                 true, true, true, null).getConvertedFileList();
-        assertEquals("[0B " + testFileTime + " rwx test.txt]", dirList.toString());
+        assertEquals("[" + testFileSize + " " + testFileTime + " rwx test.txt]", dirList.toString());
     }
 
     @Test
     public void printDirectoryAllFlags() throws Exception {
         ArrayList<String> dirList = new Ls(testDirectoryAddress,
                 true, true, true, null).getConvertedFileList();
-        assertEquals("[0B " + testFileTime + " rwx test.txt, " +
-                              "0B " + testRarTime + " rwx test.rar, " +
-                              "0B "+ emptyDirectoryTime + " rwx emptyDirectory]", dirList.toString());
+        assertEquals("[" + testFileSize + " " + testFileTime + " rwx test.txt, "
+                + testRarSize + " " + testRarTime + " rwx test.rar, "
+                + emptyDirectorySize + " " + emptyDirectoryTime + " rwx emptyDirectory]", dirList.toString());
     }
 
     @Test
     public void printFileLFlag() throws Exception {
         ArrayList<String> dirList = new Ls(testFileDirectory,
                 true, false, false, null).getConvertedFileList();
-        assertEquals("[test.txt 111 " + testFileTime + " 0]", dirList.toString());
+        assertEquals("[test.txt 111 " + testFileTime + " " + testFile.length() + "]", dirList.toString());
     }
 
     @Test
     public void printFileHFlag() throws Exception {
         ArrayList<String> dirList = new Ls(testFileDirectory,
                 false, true, false, null).getConvertedFileList();
-        assertEquals("[test.txt rwx  0B]", dirList.toString());
+        assertEquals("[test.txt rwx " + testFileSize + "]", dirList.toString());
     }
 
     @Test
     public void printFileRFlag() throws Exception {
         ArrayList<String> dirList = new Ls(testDirectoryAddress,
                 false, false, true, null).getConvertedFileList();
-        assertEquals("[   test.txt,    test.rar,    emptyDirectory]", dirList.toString());
+        assertEquals("[test.txt, test.rar, emptyDirectory]", dirList.toString());
     }
 
     @Test
     public void printFileLAndHFlag() throws Exception {
         ArrayList<String> dirList = new Ls(testFileDirectory,
                 true, true, false, null).getConvertedFileList();
-        assertEquals("[test.txt rwx " + testFileTime +" 0B]", dirList.toString());
+        assertEquals("[test.txt rwx " + testFileTime + " " + testFileSize + "]", dirList.toString());
     }
 
     @Test
     public void printFileHandRFlag() throws Exception {
         ArrayList<String> dirList = new Ls(testFileDirectory,
                 false, true, true, null).getConvertedFileList();
-        assertEquals("[0B  rwx test.txt]", dirList.toString());
+        assertEquals("[" + testFileSize + " rwx test.txt]", dirList.toString());
     }
 
     @Test
     public void printFileLandRFlag() throws Exception {
         ArrayList<String> dirList = new Ls(testFileDirectory,
                 true, false, true, null).getConvertedFileList();
-        assertEquals("[0 " + testFileTime + " 111 test.txt]", dirList.toString());
+        assertEquals("[" + testFile.length() + " " + testFileTime + " 111 test.txt]", dirList.toString());
     }
 
     @Test
@@ -120,7 +126,7 @@ public class Tests {
         String content = new String(Files.readAllBytes(Paths.get("TestFile.txt")));
 
         assertTrue(expectedFile.exists());  //check if file exists
-        assertEquals("test.txt   ", content); //check for equality of contents
+        assertEquals("test.txt", content); //check for equality of contents
 
         expectedFile.delete();
     }
@@ -129,14 +135,14 @@ public class Tests {
     public void printFileNoFlag() throws Exception {
         ArrayList<String> dirList = new Ls(testFileDirectory,
                 false, false, false, null).getConvertedFileList();
-        assertEquals("[test.txt   ]", dirList.toString());
+        assertEquals("[test.txt]", dirList.toString());
     }
 
     @Test
     public void printDirectoryNoFlag() throws Exception {
         ArrayList<String> dirList = new Ls(testDirectoryAddress,
                 false, false, false, null).getConvertedFileList();
-        assertEquals("[emptyDirectory   , test.rar   , test.txt   ]", dirList.toString());
+        assertEquals("[emptyDirectory, test.rar, test.txt]", dirList.toString());
     }
 
     @Test
@@ -151,12 +157,4 @@ public class Tests {
         ArrayList<String> dirList = new Ls(emptyDirectoryAddress + "/wtf.txt",
                 true, true, true, null).getConvertedFileList();
     }
-
-    private static String getLastModify(File file) {
-        Date fileDate = new Date(file.lastModified());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-
-        return dateFormat.format(fileDate);
-    }
-
 }
