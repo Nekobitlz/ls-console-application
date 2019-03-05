@@ -1,9 +1,6 @@
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Contains methods for running the console ls utility
@@ -51,7 +48,7 @@ public class Ls {
      * Writes all the found information to a file (output flag)
      *
      * @param fileList Converted list with all flags
-     * @throws IOException
+     * @throws IOException If an I/O error occurs
      */
     public void writeInformationToFile(ArrayList<String> fileList) throws IOException {
         File newOutputFile = new File(outputFile);
@@ -81,6 +78,9 @@ public class Ls {
             Collections.addAll(fileList, Objects.requireNonNull(file.listFiles()));
         else
             fileList.add(file);
+
+        //sorted by name
+        fileList.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
 
         return fileList;
     }
@@ -131,8 +131,11 @@ public class Ls {
         }
 
         //if rFlag is active - reverts the output line
-        return rFlag ? String.format("%s %s %s %s", fileStringLength,  lastModify, rwxPermissions, fileName)
-                     : String.format("%s %s %s %s", fileName, rwxPermissions, lastModify, fileStringLength);
+        String convertedFile = rFlag
+                ? String.format("%s %s %s %s", fileStringLength,  lastModify, rwxPermissions, fileName)
+                : String.format("%s %s %s %s", fileName, rwxPermissions, lastModify, fileStringLength);
+
+        return convertedFile.replaceAll("[\\s]{2,}", " ").trim();
     }
 
     /**
@@ -142,7 +145,7 @@ public class Ls {
      *
      * @return Date and time of the last file change
      */
-    private String getLastModify(File file) {
+    public static String getLastModify(File file) {
         Date fileDate = new Date(file.lastModified());
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
@@ -184,7 +187,7 @@ public class Ls {
      *
      * @return Human-readable file size
      */
-    private String getHumanReadableSize(File file) {
+    public static String getHumanReadableSize(File file) {
         long fileSize = file.length();
         String hrSize = "";
 
