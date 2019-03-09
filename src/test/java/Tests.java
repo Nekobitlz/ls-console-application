@@ -37,14 +37,24 @@ public class Tests {
         testFile.createNewFile();
         testFileTime = Ls.getLastModify(testFile);
         testFileSize = Ls.getHumanReadableSize(testFile);
+        setPermissions(testFile);
 
         testRar.createNewFile();
         testRarTime = Ls.getLastModify(testRar);
         testRarSize = Ls.getHumanReadableSize(testRar);
+        setPermissions(testRar);
 
         Files.createDirectories(Paths.get(emptyDirectoryAddress));
         emptyDirectoryTime = Ls.getLastModify(emptyDirectory);
         emptyDirectorySize = Ls.getHumanReadableSize(emptyDirectory);
+        setPermissions(emptyDirectory);
+    }
+
+    //sets rwx flags
+    private static void setPermissions(File file) {
+        file.setReadable(true);
+        file.setWritable(true);
+        file.setExecutable(true);
     }
 
     @After
